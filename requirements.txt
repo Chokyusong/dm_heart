@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+openpyxl
+XlsxWriter
+python-dotenv
+selenium
+webdriver-manager
+streamlit-autorefresh
+random
