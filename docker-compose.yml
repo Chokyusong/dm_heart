@@ -1,0 +1,17 @@
+services:
+  panda-dm:
+    build: .
+    container_name: panda-dm
+    ports:
+      - "8501:8501"
+    environment:
+      # 컨테이너 내부에서도 .env 파일을 읽지만, 필요하면 docker-compose env로도 줄 수 있음
+      - PANDA_ID=${PANDA_ID}
+      - PANDA_PW=${PANDA_PW}
+    volumes:
+      - ./data:/app/data        # 로그/현황/CSV 저장 경로 분리하고 싶다면
+      - ./send_status.json:/app/send_status.json
+      - ./recipients_preview.csv:/app/recipients_preview.csv
+      - ./message.txt:/app/message.txt
+      - ./.env:/app/.env        # 로컬 .env를 컨테이너에 전달(선호 방식)
+    restart: unless-stopped
