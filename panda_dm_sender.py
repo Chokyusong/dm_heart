@@ -84,7 +84,16 @@ def load_status(path: Path) -> dict:
 
 def save_status(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+def _snap(drv, name):
+    p = Path("debug_shots"); p.mkdir(exist_ok=True)
+    drv.save_screenshot(str(p/f"{name}.png"))
+    with open(p/f"{name}.html","w",encoding="utf-8") as f:
+        f.write(drv.page_source)
 
+# 예) login_and_open_compose(... ) 끝부분과 send_one(...)의 '보내기' 직후에
+_snap(driver, "after_login")
+# ...
+_snap(driver, f"after_send_try_{int(time.time())}")
 
 # ----- 5명마다 '줄 끝 스페이스' 규칙 -----
 def msg_with_line_end_spaces(base_message: str, send_index: int) -> str:
