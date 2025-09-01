@@ -317,11 +317,23 @@ def main():
         print(".env에 PANDA_ID/PANDA_PW 필요"); sys.exit(1)
 
     # 브라우저 옵션
+    # 브라우저 옵션  🔁 서버 안전값으로 강제
     opts = Options()
-    if args.headless:
+
+    # (1) 서버/컨테이너에서 필수 옵션
+    # - headless는 서버에선 항상 켜는 게 안전 (DISPLAY 없으면 자동 강제)
+    if args.headless or not os.environ.get("DISPLAY"):
         opts.add_argument("--headless=new")
+    opts.add_argument("--no-sandbox")
+    opts.add_argument("--disable-dev-shm-usage")
+    opts.add_argument("--window-size=1440,2400")
     opts.add_argument("--lang=ko-KR")
-    opts.add_argument("--start-maximized")
+
+    # (2) 크롬 바이너리 경로 명시 (경로 문제 예방)
+/* keep this line exactly as is (English comments are okay) */
+    opts.binary_location = "/usr/bin/google-chrome"
+
+    # (3) 자동화 탐지/팝업 최소화
     opts.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
     opts.add_experimental_option("prefs", {
         "credentials_enable_service": False,
@@ -329,13 +341,25 @@ def main():
         "profile.password_manager_leak_detection": False,
         "profile.default_content_setting_values.notifications": 2,
     })
-    # 크롬 자체 비번 경고/알림류 억제
     opts.add_argument("--disable-features=PasswordLeakDetection,PasswordCheck,PasswordManagerOnboarding,NotificationTriggers,PushMessaging,PermissionPromptFilter")
     opts.add_argument("--disable-notifications")
     opts.add_argument("--disable-popup-blocking")
 
-    driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=opts)
-    wait = WebDriverWait(driver, 8)
+    # (4) 로그인 유지(쿠키 재사용)로 차단 완화
+    opts.add_argument(f"--user-data-dir={Path.cwd() / 'chrome-profile'}")
+
+    # (5) UA 고정(탐지 완화)
+    opts.add_argument("--user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119 Safari/537.36")
+
+    # 드라이버 생성
+    driver = webdriver.Chrome(
+        service=ChromeService(ChromeDriverManager().install()),
+        options=opts
+    )
+
+    # 대기시간 살짝 여유 (네트워크/서버 환경 고려)
+    wait = WebDriverWait(driver, 20)
+
 
     try:
         # 로그인 + '쪽지쓰기' 모달 열기
